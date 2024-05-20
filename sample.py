@@ -76,10 +76,13 @@ def my_app(cfg):
             metric_fn,
         )
         extra_params = {key: params[key] for key in params if key not in ["step_size"]}
-        (state, parameters), info_adapt = adaptation(
+        (state, params), info_adapt = adaptation(
             sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_params
         )
+        states = jnp.tile(state, (num_chains, 1))
     else:
+        initial_positions = jnp.zeros((num_chains, dim))
+        states = jax.vmap(sampler.init)(initial_positions)
         params = set_params_sampler(
             sampler_type,
             step_size,
@@ -90,10 +93,9 @@ def my_app(cfg):
         )
 
     sampler = sampler_fn(logdensity_fn, **params)
-    initial_positions = jnp.zeros((num_chains, dim))
-    initial_states = jax.vmap(sampler.init)(initial_positions)
+
     states, info, elapsed_time = inference_loop_multiple_chains(
-        rng_key, sampler, initial_states, total_num_steps, num_chains
+        rng_key, sampler, states, total_num_steps, num_chains
     )
     print(f"MCMC elapsed time: {elapsed_time:.2f} seconds")
     print(f"Acceptance rate: {info.acceptance_rate.mean()}")
