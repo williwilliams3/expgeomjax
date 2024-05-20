@@ -1,0 +1,9 @@
+sampler_type: lmc
+num_integration_steps: 10
+step_size: 0.1
+num_samples : 10_000
+num_chains : 8
+burnin: 1000
+thinning: 1
+metric_method: fisher
+alpha: 1.0

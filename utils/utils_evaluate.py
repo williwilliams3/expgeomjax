@@ -1,10 +1,10 @@
-from jax import config
-
 import jax
 import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
-import matplotlib.pyplot as plt
+
+import geomjax
+
 import ot
 import os
 

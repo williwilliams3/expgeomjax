@@ -1,7 +1,8 @@
-sampler_type: nuts
+sampler_type: nutslmc
 step_size: 0.1
 num_samples : 10_000
 num_chains : 8
 burnin: 1000
 thinning: 1
-metric_method: euc
+metric_method: fisher
+

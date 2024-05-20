@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from src.metrics import softabs_metric
+from utils.metrics import softabs_metric
 
 
 def set_metric_fisher_fn(M, is_cholesky):

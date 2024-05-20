@@ -12,10 +12,12 @@ def set_sampler(logdensity_fn, sampler_type, params):
         sampler = geomjax.rmhmc(logdensity_fn, **params)
     elif sampler_type == "nuts":
         sampler = geomjax.nuts(logdensity_fn, **params)
-    elif sampler_type == "nuts":
-        sampler = geomjax.nuts(logdensity_fn, **params)
-    elif sampler_type == "nuts":
-        sampler = geomjax.nuts(logdensity_fn, **params)
+    elif sampler_type == "nutslmc":
+        sampler = geomjax.nutslmc(logdensity_fn, **params)
+    elif sampler == "nutslmcmonge":
+        sampler = geomjax.nutslmcmonge(logdensity_fn, **params)
+    elif sampler_type == "nutsrmhmc":
+        sampler = geomjax.nutsrmhmc(logdensity_fn, **params)
     return sampler
 
 
@@ -40,6 +42,7 @@ def set_params_sampler(
         params["step_size"] = step_size
         params["num_integration_steps"] = num_integration_steps
         params["alpha2"] = alpha2
+        params["inverse_mass_matrix"] = inverse_mass_matrix
     elif sampler_type == "rmhmc":
         params["step_size"] = step_size
         params["num_integration_steps"] = num_integration_steps
@@ -56,4 +59,5 @@ def set_params_sampler(
     elif sampler_type == "nutslmcmonge":
         params["step_size"] = step_size
         params["alpha2"] = alpha2
+        params["inverse_mass_matrix"] = inverse_mass_matrix
     return params
