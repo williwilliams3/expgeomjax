@@ -3,8 +3,6 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 
-import geomjax
-
 import ot
 import os
 
@@ -70,3 +68,7 @@ def evaluate(
     )
 
     return distances1, distances2
+
+
+def gradient_count():
+    return 0

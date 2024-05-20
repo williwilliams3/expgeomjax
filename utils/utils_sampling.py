@@ -3,22 +3,6 @@ import time
 import numpy as np
 
 
-def inference_loop(rng_key, sampler, initial_position, num_samples):
-    initial_state = sampler.init(initial_position)
-
-    kernel = sampler.step
-
-    @jax.jit
-    def one_step(state, rng_key):
-        state, _ = kernel(rng_key, state)
-        return state, state
-
-    keys = jax.random.split(rng_key, num_samples)
-    _, states = jax.lax.scan(one_step, initial_state, keys)
-
-    return states
-
-
 def inference_loop_multiple_chains(
     rng_key, sampler, initial_states, num_samples, num_chains
 ):
@@ -29,16 +13,47 @@ def inference_loop_multiple_chains(
     @jax.jit
     def one_step(states, rng_key):
         keys = jax.random.split(rng_key, num_chains)
-        states, _ = jax.vmap(kernel)(keys, states)
-        return states, states
+        states, info = jax.vmap(kernel)(keys, states)
+        return states, (states, info)
 
     start_time = time.time()
     keys = jax.random.split(rng_key, num_samples)
-    _, states = jax.lax.scan(one_step, initial_states, keys)
+    _, (states, info) = jax.lax.scan(one_step, initial_states, keys)
     end_time = time.time()
     elapsed_time = end_time - start_time
 
-    return states, elapsed_time
+    return states, info, elapsed_time
+
+
+# Multiple chains with pmap
+def inference_loop(rng_key, sampler, initial_state, num_samples):
+    kernel = sampler.step
+
+    @jax.jit
+    def one_step(state, rng_key):
+        state, _ = kernel(rng_key, state)
+        return state, (state, info)
+
+    keys = jax.random.split(rng_key, num_samples)
+    _, (states, info) = jax.lax.scan(one_step, initial_state, keys)
+
+    return states, info
+
+
+def inference_loop_multiple_chains_pmap(
+    rng_key, sampler, initial_states, num_samples, num_chains
+):
+    start_time = time.time()
+    keys = jax.random.split(rng_key, num_chains)
+    _inference_loop_multiple_chains = jax.pmap(
+        inference_loop, in_axes=(0, None, 0, None), static_broadcasted_argnums=(1, 3)
+    )
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    states, info = _inference_loop_multiple_chains(
+        keys, sampler, initial_states, num_samples
+    )
+    return states, info, elapsed_time
 
 
 def get_reference_draws(M, name_model):

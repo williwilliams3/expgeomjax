@@ -50,7 +50,7 @@ def plot_samples_marginal(
     samples = samples[:, [0, -1]]
     sub_samples = sub_sample(samples, max_samples=4000)
 
-    if M.name == "banana":
+    if M.name == "Banana":
         true_dist_levels = [-210.0, -205.0, -204.0]
         contours = get_contours(xlim, ylim, M.logp)
         [X, Y, Z] = contours

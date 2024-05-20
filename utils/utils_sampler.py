@@ -1,23 +1,23 @@
 import geomjax
 
 
-def set_sampler(logdensity_fn, sampler_type, params):
+def set_sampler(sampler_type):
     if sampler_type == "hmc":
-        sampler = geomjax.hmc(logdensity_fn, **params)
+        sampler = geomjax.hmc
     elif sampler_type == "lmc":
-        sampler = geomjax.lmc(logdensity_fn, **params)
+        sampler = geomjax.lmc
     elif sampler_type == "lmcmonge":
-        sampler = geomjax.lmcmonge(logdensity_fn, **params)
+        sampler = geomjax.lmcmonge
     elif sampler_type == "rmhmc":
-        sampler = geomjax.rmhmc(logdensity_fn, **params)
+        sampler = geomjax.rmhmc
     elif sampler_type == "nuts":
-        sampler = geomjax.nuts(logdensity_fn, **params)
+        sampler = geomjax.nuts
     elif sampler_type == "nutslmc":
-        sampler = geomjax.nutslmc(logdensity_fn, **params)
+        sampler = geomjax.nutslmc
     elif sampler == "nutslmcmonge":
-        sampler = geomjax.nutslmcmonge(logdensity_fn, **params)
+        sampler = geomjax.nutslmcmonge
     elif sampler_type == "nutsrmhmc":
-        sampler = geomjax.nutsrmhmc(logdensity_fn, **params)
+        sampler = geomjax.nutsrmhmc
     return sampler
 
 

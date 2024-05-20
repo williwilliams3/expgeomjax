@@ -1,7 +1,9 @@
 from jax import config
+import os
 
 config.update("jax_enable_x64", True)
-import os
+os.environ["XLA_FLAGS"] = 8
+
 import sys
 import gc
 
@@ -24,6 +26,7 @@ from utils import (
     set_params_sampler,
     set_metric_fn,
     evaluate,
+    adaptation,
 )
 from plotting.plotting_functions import plot_samples_marginal
 import json
@@ -50,6 +53,7 @@ def my_app(cfg):
     num_integration_steps = sampler_config.num_integration_steps
     metric_method = sampler_config.metric_method
     alpha = sampler_config.alpha
+    run_adaptation = sampler_config.run_adaptation
 
     total_num_steps = burnin + num_samples * thinning
 
@@ -57,31 +61,54 @@ def my_app(cfg):
     output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     model, dim = set_model(model_name, dim)
     logdensity_fn = model.logp
-    # TODO: Adaptation for inverse mass matrix and step size
-    inverse_mass_matrix = jnp.ones(dim)
-    metric_fn = set_metric_fn(model, metric_method)
-    params = set_params_sampler(
-        sampler_type,
-        step_size,
-        num_integration_steps,
-        alpha,
-        inverse_mass_matrix,
-        metric_fn,
-    )
-    sampler = set_sampler(logdensity_fn, sampler_type, params)
+    position = jnp.zeros(dim)
 
+    metric_fn = set_metric_fn(model, metric_method)
+    inverse_mass_matrix = jnp.ones(dim)
+    sampler_fn = set_sampler(logdensity_fn, sampler_type, params)
+    if run_adaptation:
+        params = set_params_sampler(
+            sampler_type,
+            step_size,
+            num_integration_steps,
+            alpha,
+            inverse_mass_matrix,
+            metric_fn,
+        )
+        extra_params = {key: params[key] for key in params if key not in ["step_size"]}
+        (state, parameters), info_adapt = adaptation(
+            sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_params
+        )
+    else:
+        params = set_params_sampler(
+            sampler_type,
+            step_size,
+            num_integration_steps,
+            alpha,
+            inverse_mass_matrix,
+            metric_fn,
+        )
+
+    sampler = sampler_fn(logdensity_fn, **params)
     initial_positions = jnp.zeros((num_chains, dim))
     initial_states = jax.vmap(sampler.init)(initial_positions)
-    states, elapsed_time = inference_loop_multiple_chains(
+    states, info, elapsed_time = inference_loop_multiple_chains(
         rng_key, sampler, initial_states, total_num_steps, num_chains
     )
     print(f"MCMC elapsed time: {elapsed_time:.2f} seconds")
+    print(f"Acceptance rate: {info.acceptance_rate.mean()}")
     samples_tensor = states.position
     samples_tensor = samples_tensor[burnin::thinning]
     samples = samples_tensor.reshape(num_samples * num_chains, dim)
 
     if dim == 2:
-        plot_samples_marginal(samples, model, file_name=f"{output_dir}/samples.png")
+        remove_outliers_theta0 = model.name == "NealFunnel"
+        plot_samples_marginal(
+            samples,
+            model,
+            file_name=f"{output_dir}/samples.png",
+            remove_outliers_theta0=remove_outliers_theta0,
+        )
 
     if run_evaluation:
         # ESS and Rhat
@@ -95,6 +122,7 @@ def my_app(cfg):
             "rhat": float(rhat),
             "ess": float(ess),
             "elapsed_time": float(elapsed_time),
+            "average_acceptance_rate": float(info.acceptance_rate.mean()),
             "gradient_evaluations": int(gradient_evaluations),
         }
         with open("stats.json", "w") as f:

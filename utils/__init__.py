@@ -3,7 +3,7 @@ from utils.utils_sampling import inference_loop_multiple_chains, get_reference_d
 from utils.utils_sampler import set_sampler, set_params_sampler
 from utils.utils_metric import set_metric_fn
 from utils.utils_evaluate import evaluate
-
+from utils.utils_adaptation import adaptation
 
 __all__ = [
     "set_model",
