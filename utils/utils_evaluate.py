@@ -3,6 +3,9 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 
+import geomjax.rmhmc.integrators as integrators
+import geomjax.rmhmc.metrics as metrics
+
 import ot
 import os
 
@@ -70,5 +73,61 @@ def evaluate(
     return distances1, distances2
 
 
-def gradient_count():
-    return 0
+def evaluate_difficult_marginal(
+    model_name, rng_key, samples, true_samples, repeats, subsample_size=2000
+):
+    if model_name in ["funnel", "rosenbrock", "squiggle"]:
+        col_index = -1 if model_name == "funnel" else 0
+        return evaluate(
+            rng_key,
+            samples[:, col_index],
+            true_samples[:, col_index],
+            repeats,
+            subsample_size,
+        )
+    return
+
+
+def number_gradient_evaluations(
+    sampler_type,
+    total_num_steps,
+    num_chains,
+    num_integration_steps,
+    info,
+    average_implicit_steps=5,
+):
+    if sampler_type in ["hmc", "lmc", "lmcmonge"]:
+        gradient_evals = total_num_steps * num_chains * num_integration_steps
+    elif sampler_type in ["rmhmc"]:
+        gradient_evals = (
+            total_num_steps
+            * num_chains
+            * num_integration_steps
+            * average_implicit_steps
+        )
+    elif sampler_type in ["nuts", "nutslmc", "nutslmcmonge"]:
+        gradient_evals = jnp.sum(info.num_integration_steps)
+    elif sampler_type in ["nutsrmhmc"]:
+        gradient_evals = jnp.sum(info.num_integration_steps) * average_implicit_steps
+
+    return gradient_evals
+
+
+def estimate_implicit_steps(sampler_type, states, step_size, logdensity_fn, metric_fn):
+
+    if sampler_type in ["rmhmc", "nutsrmhmc"]:
+        integrator = integrators.implicit_midpoint
+        (
+            _,
+            kinetic_energy_fn,
+            _,
+            inverse_metric_vector_product,
+        ) = metrics.gaussian_riemannian(metric_fn)
+        symplectic_integrator = integrator(
+            logdensity_fn, kinetic_energy_fn, inverse_metric_vector_product
+        )
+        integrator_fn = lambda x: symplectic_integrator(x, step_size)
+        _, info = jax.vmap(integrator_fn)(states)
+        return info.iters.mean()
+    else:
+        return 1

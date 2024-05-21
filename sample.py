@@ -28,6 +28,7 @@ from utils import (
     evaluate,
     adaptation,
 )
+from utils.utils_evaluate import number_gradient_evaluations, estimate_implicit_steps
 from plotting.plotting_functions import plot_samples_marginal
 import json
 
@@ -122,10 +123,19 @@ def my_app(cfg):
         # ESS and Rhat
         rhat = geomjax.rhat(samples_tensor, chain_axis=1, sample_axis=0)
         ess = geomjax.ess(samples_tensor, chain_axis=1, sample_axis=0)
-        elapsed_time
-        # TODO: Fix this
-        # gradient_evaluations = number_gradient_evaluations()
-        gradient_evaluations = total_num_steps * num_chains * num_integration_steps
+        average_implicit_steps = estimate_implicit_steps(
+            states, step_size, logdensity_fn, metric_fn
+        )
+        print(f"Average implicit steps: {average_implicit_steps}")
+        gradient_evaluations = number_gradient_evaluations(
+            sampler_type,
+            total_num_steps,
+            num_chains,
+            num_integration_steps,
+            info,
+            average_implicit_steps=average_implicit_steps,
+        )
+
         sampling_stats = {
             "rhat": float(rhat),
             "ess": float(ess),
@@ -133,7 +143,7 @@ def my_app(cfg):
             "average_acceptance_rate": float(info.acceptance_rate.mean()),
             "gradient_evaluations": int(gradient_evaluations),
         }
-        with open("stats.json", "w") as f:
+        with open(f"{output_dir}/stats.json", "w") as f:
             json.dump(sampling_stats, f)
 
         # Wasserstein distance
@@ -141,6 +151,17 @@ def my_app(cfg):
         distances1, distances2 = evaluate(rng_key, samples, true_samples, repeats)
         np.save(f"{output_dir}/distances1.npy", distances1)
         np.save(f"{output_dir}/distances2.npy", distances2)
+        if model_name in ["funnel", "rosenbrock", "squiggle"]:
+            col_index = -1 if model_name == "funnel" else 0
+            distances_marginal1, distances_marginal1 = evaluate(
+                rng_key,
+                samples[:, col_index],
+                true_samples[:, col_index],
+                repeats,
+            )
+            np.save(f"{output_dir}/distances1.npy", distances_marginal1)
+            np.save(f"{output_dir}/distances2.npy", distances_marginal1)
+
         del distances1, distances2
         del true_samples
 
