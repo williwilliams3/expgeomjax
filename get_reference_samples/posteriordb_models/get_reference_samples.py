@@ -5,14 +5,10 @@
 
 """
 
-import sys
 import os
 
-PROJECT_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.dirname(__file__)), os.pardir)
-)
-sys.path.append(PROJECT_ROOT)
-print(PROJECT_ROOT)
+current_file_path = os.path.abspath(__file__)
+current_directory = os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))
 
 from posteriordb import PosteriorDatabase
 import pandas as pd
@@ -21,7 +17,8 @@ import numpy as np
 import stan
 
 
-def get_posterior(name, pdb_path="posteriordb/posterior_database"):
+def get_posterior(name, pdb_path="../posteriordb/posterior_database"):
+    # Change pdb_path to the path of the posteriordb database
     try:
         my_pdb = PosteriorDatabase(pdb_path)
         # my_pdb.posterior_names() # names of posteriors
@@ -31,9 +28,8 @@ def get_posterior(name, pdb_path="posteriordb/posterior_database"):
         raise Exception("Unable to load posteriordb model")
 
 
-def get_referencedraws(name, posterior, print_summary=True):
+def get_referencedraws(posterior, print_summary=True):
     gs = posterior.reference_draws()
-    # num_params = sum(posterior.posterior_info["dimensions"].values())
     gs = pd.DataFrame(gs)
     gs["chain"] = range(10)
 
@@ -88,10 +84,11 @@ if __name__ == "__main__":
     ]
 
     for model_name in model_names:
+        print(f"Processing {model_name}...")
 
         path = f"{model_category}/{model_name}"
         posterior = get_posterior(model_name)
-        d3 = get_referencedraws(model_name, posterior)
+        d3 = get_referencedraws(posterior)
         d3_unconstrained = constrained_to_unconstrained_params(posterior, d3)
         if not os.path.exists(f"data/{path}"):
             os.makedirs(f"data/{path}")
@@ -99,4 +96,4 @@ if __name__ == "__main__":
         df = pd.DataFrame(d3_unconstrained)
         df["chain"] = d3.reset_index().chain
         df["draw"] = d3.reset_index().draw
-        df.to_csv(f"data/{path}/reference_samples.csv", index=False)
+        df.to_csv(f"{current_directory}/data/{path}/reference_samples.csv", index=False)
