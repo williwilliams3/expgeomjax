@@ -56,22 +56,30 @@ def inference_loop_multiple_chains_pmap(
     return states, info, elapsed_time
 
 
-def get_reference_draws(M, name_model):
+def get_reference_draws(M, name_model, num_samples):
     if M.name in ["NealFunnel", "Squiggle", "Rosenbrock"]:
         rng_key_true = jax.random.PRNGKey(42)
-        samples_true = np.array(M.generate_samples(rng_key_true))
+        samples_true = np.array(M.generate_samples(rng_key_true, num_samples))
     elif M.name == "Banana":
         in_path = f"data/reference_draws_unconstrained/{M.name}/reference_samples.npy"
         samples_true = np.load(in_path)
+        n, d = samples_true.shape
+        assert num_samples <= n
+        samples_true = samples_true[:num_samples]
     elif M.name == "LogReg":
         # TODO: For different datasets
         in_path = (
             f"data/reference_draws_unconstrained/{name_model}/reference_samples.npy"
         )
         samples_true = np.load(in_path)
+        n, d = samples_true.shape
+        assert num_samples <= n
+        samples_true = samples_true[:num_samples]
     else:
         # Load from posteriordb
         in_path = f"data/reference_draws_unconstrained/{M.name}/reference_samples.csv"
         samples_true = np.genfromtxt(in_path, delimiter=",", skip_header=1)
-        samples_true = samples_true[:, 0 : M.D]
+        n, d = samples_true.shape
+        assert num_samples <= n
+        samples_true = samples_true[:num_samples, 0 : M.D]
     return samples_true

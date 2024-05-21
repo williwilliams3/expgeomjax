@@ -3,19 +3,13 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 
-from geomjax.rmhmc.integrators import implicit_midpoint
+from geomjax.rmhmc.integrators import implicit_midpoint, IntegratorState
 from geomjax.rmhmc.metrics import gaussian_riemannian
 
 import ot
 import os
 
 path = os.path.dirname(__file__)
-
-
-def distance_wrapper(distance_fn):
-    return jax.jit(
-        jax.vmap(jax.vmap(distance_fn, in_axes=(None, 0)), in_axes=(0, None))
-    )
 
 
 def wasserstein_distance(samples1, samples2, distance_fn):
@@ -73,13 +67,6 @@ def evaluate(
     return distances1, distances2
 
 
-def evaluate_difficult_marginal(
-    model_name, rng_key, samples, true_samples, repeats, subsample_size=2000
-):
-
-    return
-
-
 def number_gradient_evaluations(
     sampler_type,
     total_num_steps,
@@ -105,9 +92,12 @@ def number_gradient_evaluations(
     return gradient_evals
 
 
-def estimate_implicit_steps(sampler_type, states, step_size, logdensity_fn, metric_fn):
+def estimate_implicit_steps(
+    sampler_type, positions, momentums, step_size, logdensity_fn, metric_fn
+):
 
     if sampler_type in ["rmhmc", "nutsrmhmc"]:
+        integration_states = (positions, momentums)
         integrator = implicit_midpoint
         (
             _,
@@ -116,10 +106,13 @@ def estimate_implicit_steps(sampler_type, states, step_size, logdensity_fn, metr
             inverse_metric_vector_product,
         ) = gaussian_riemannian(metric_fn)
         symplectic_integrator = integrator(
-            logdensity_fn, kinetic_energy_fn, inverse_metric_vector_product
+            logdensity_fn,
+            kinetic_energy_fn,
+            inverse_metric_vector_product,
+            return_info=True,
         )
         integrator_fn = lambda x: symplectic_integrator(x, step_size)
-        _, info = jax.vmap(integrator_fn)(states)
+        _, info = jax.vmap(integrator_fn)(integration_states)
         return info.iters.mean()
     else:
         return 1

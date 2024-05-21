@@ -58,7 +58,7 @@ def my_app(cfg):
     alpha = sampler_config.alpha
     run_adaptation = sampler_config.run_adaptation
 
-    total_num_steps = burnin + num_samples * thinning
+    total_num_steps = burnin + (num_samples // num_chains) * thinning
 
     rng_key = jr.key(seed)
     output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
@@ -110,14 +110,17 @@ def my_app(cfg):
     print(f"Acceptance rate: {info.acceptance_rate.mean()}")
     samples_tensor = states.position
     samples_tensor = samples_tensor[burnin::thinning]
-    samples = samples_tensor.reshape(num_samples * num_chains, dim)
+    samples = samples_tensor.reshape(num_samples, dim)
 
     if run_evaluation:
         # ESS and Rhat
         rhat = geomjax.rhat(samples_tensor, chain_axis=1, sample_axis=0)
         ess = geomjax.ess(samples_tensor, chain_axis=1, sample_axis=0)
+        momentums = info.momentum
+        momentums = momentums[burnin::thinning]
+        momentums = momentums.reshape(num_samples, dim)
         average_implicit_steps = estimate_implicit_steps(
-            sampler_type, states, step_size, logdensity_fn, metric_fn
+            sampler_type, samples, momentums, step_size, logdensity_fn, metric_fn
         )
         print(f"Rhat: {rhat}")
         print(f"ESS: {ess}")
@@ -143,7 +146,7 @@ def my_app(cfg):
             json.dump(sampling_stats, f)
 
         # Wasserstein distance
-        true_samples = get_reference_draws(model, model_name)
+        true_samples = get_reference_draws(model, model_name, num_samples)
         distances1, distances2 = evaluate(rng_key, samples, true_samples, repeats)
         np.save(f"{output_dir}/distances1.npy", distances1)
         np.save(f"{output_dir}/distances2.npy", distances2)
@@ -151,12 +154,12 @@ def my_app(cfg):
             col_index = -1 if model_name == "funnel" else 0
             distances_marginal1, distances_marginal1 = evaluate(
                 rng_key,
-                samples[:, col_index],
-                true_samples[:, col_index],
+                samples[:, col_index : jnp.newaxis],
+                true_samples[:, col_index : jnp.newaxis],
                 repeats,
             )
-            np.save(f"{output_dir}/distances1.npy", distances_marginal1)
-            np.save(f"{output_dir}/distances2.npy", distances_marginal1)
+            np.save(f"{output_dir}/distances_marginal1.npy", distances_marginal1)
+            np.save(f"{output_dir}/distances_marginal2.npy", distances_marginal1)
 
         del distances1, distances2
         del true_samples

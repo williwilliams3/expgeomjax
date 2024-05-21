@@ -13,4 +13,5 @@ __all__ = [
     "set_params_sampler",
     "set_metric_fn",
     "evaluate",
+    "adaptation",
 ]
