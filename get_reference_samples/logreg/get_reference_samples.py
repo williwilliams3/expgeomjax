@@ -42,7 +42,7 @@ def generate_samples_stan(
     if samples_dir is not None:
         os.makedirs(samples_dir, exist_ok=True)
         np.save(
-            os.path.join(samples_dir, f"reference_samples_{self.dataset_name}.npy"),
+            os.path.join(samples_dir, f"reference_samples.npy"),
             samples,
         )
 
@@ -52,35 +52,11 @@ def generate_samples_stan(
 if __name__ == "__main__":
     from postjax.bayesian_log_reg import baylogreg
 
-    M = baylogreg(dataset_name="australian")
-    samples = generate_samples_stan(
-        M,
-        samples_dir=os.path.join(
-            current_directory, "data/ground_truth_samples/banana/"
-        ),
-    )
-    print(samples.shape)
-
-    M = baylogreg(
-        dataset_name="german",
-        samples_dir=os.path.join(current_directory, "data/reference_samples/banana/"),
-    )
-    generate_samples_stan(M)
-
-    M = baylogreg(
-        dataset_name="heart",
-        samples_dir=os.path.join(current_directory, "data/reference_samples/banana/"),
-    )
-    generate_samples_stan(M)
-
-    M = baylogreg(
-        dataset_name="pima",
-        samples_dir=os.path.join(current_directory, "data/reference_samples/banana/"),
-    )
-    generate_samples_stan(M)
-
-    M = baylogreg(
-        dataset_name="ripley",
-        samples_dir=os.path.join(current_directory, "data/reference_samples/banana/"),
-    )
-    generate_samples_stan(M)
+    for dataset_name in ["australian", "german", "heart", "pima", "ripley"]:
+        M = baylogreg(dataset_name=dataset_name)
+        samples = generate_samples_stan(
+            M,
+            samples_dir=os.path.join(
+                current_directory, f"data/reference_samples/logreg/{dataset_name}"
+            ),
+        )

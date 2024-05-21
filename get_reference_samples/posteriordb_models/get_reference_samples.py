@@ -66,7 +66,6 @@ def constrained_to_unconstrained_params(posterior, samples):
 
 
 if __name__ == "__main__":
-    model_category = "reference_samples"
     model_names = [
         "arK-arK",
         "arma-arma11",
@@ -77,7 +76,6 @@ if __name__ == "__main__":
         "eight_schools-eight_schools_noncentered",
         "garch-garch11",
         "gp_pois_regr-gp_regr",
-        "hudson_lynx_hare-lotka_volterra",
         "low_dim_gauss_mix-low_dim_gauss_mix",
         "nes2000-nes",
         "sblrc-blr",
@@ -86,7 +84,7 @@ if __name__ == "__main__":
     for model_name in model_names:
         print(f"Processing {model_name}...")
 
-        path = f"{model_category}/{model_name}"
+        path = f"reference_samples/postdb/{model_name}"
         posterior = get_posterior(model_name)
         d3 = get_referencedraws(posterior)
         d3_unconstrained = constrained_to_unconstrained_params(posterior, d3)

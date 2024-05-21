@@ -17,7 +17,6 @@ def sub_sample(samples, max_samples=1000):
 def plot_samples_marginal(
     samples,
     M,
-    densities=True,
     xaxes=["θ1", "θ2"],
     save_fig=True,
     scatter_color="#7FD6FF",
@@ -43,9 +42,12 @@ def plot_samples_marginal(
         M.__init__()
 
     g = lambda x, y: np.exp(M.logp(np.array([x, y])))
-    # g = lambda x,y: M.logp([x,y])
-    if densities:
+
+    if M.name in ["NealFunnel", "Rosenbrock", "Squiggle"]:
         density1, density2 = M.densities()
+    else:
+        density1 = None
+        density2 = None
     # get only first and last column
     samples = samples[:, [0, -1]]
     sub_samples = sub_sample(samples, max_samples=4000)
@@ -112,7 +114,7 @@ def plot_samples_marginal(
         color=scatter_color,
     )
 
-    # bottom right histogram
+    # bottom right histogramx
     axs[1, 1].hist(
         samples[:, 1],
         bins=40,

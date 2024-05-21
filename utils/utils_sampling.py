@@ -1,6 +1,10 @@
 import jax
 import time
 import numpy as np
+import os
+
+current_file_path = os.path.abspath(__file__)
+current_directory = os.path.dirname(os.path.dirname(current_file_path))
 
 
 def inference_loop_multiple_chains(
@@ -56,28 +60,32 @@ def inference_loop_multiple_chains_pmap(
     return states, info, elapsed_time
 
 
-def get_reference_draws(M, name_model, num_samples):
-    if M.name in ["NealFunnel", "Squiggle", "Rosenbrock"]:
+def get_reference_draws(M, name_model, num_samples, sub_name=""):
+    if name_model in ["funnel", "squiggle", "rosenrbrock"]:
         rng_key_true = jax.random.PRNGKey(42)
         samples_true = np.array(M.generate_samples(rng_key_true, num_samples))
-    elif M.name == "Banana":
-        in_path = f"data/reference_draws_unconstrained/{M.name}/reference_samples.npy"
+    elif name_model == "banana":
+        in_path = f"data/reference_samples/{name_model}/reference_samples.npy"
+        in_path = os.path.join(current_directory, in_path)
         samples_true = np.load(in_path)
         n, d = samples_true.shape
         assert num_samples <= n
         samples_true = samples_true[:num_samples]
-    elif M.name == "LogReg":
-        # TODO: For different datasets
+    elif name_model == "logreg":
         in_path = (
-            f"data/reference_draws_unconstrained/{name_model}/reference_samples.npy"
+            f"data/reference_samples/{name_model}/{sub_name}/reference_samples.npy"
         )
+        in_path = os.path.join(current_directory, in_path)
         samples_true = np.load(in_path)
         n, d = samples_true.shape
         assert num_samples <= n
         samples_true = samples_true[:num_samples]
-    else:
+    elif name_model == "postdb":
         # Load from posteriordb
-        in_path = f"data/reference_draws_unconstrained/{M.name}/reference_samples.csv"
+        in_path = (
+            f"data/reference_samples/{name_model}/{sub_name}/reference_samples.csv"
+        )
+        in_path = os.path.join(current_directory, in_path)
         samples_true = np.genfromtxt(in_path, delimiter=",", skip_header=1)
         n, d = samples_true.shape
         assert num_samples <= n

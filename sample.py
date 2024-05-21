@@ -47,6 +47,10 @@ def my_app(cfg):
     dim = model_config.dim
     run_evaluation = model_config.run_evaluation
     make_plots = model_config.make_plots
+    if model_name in ["logreg", "postdb"]:
+        sub_name = model_config.sub_name
+    else:
+        sub_name = ""
 
     num_samples = sampler_config.num_samples
     num_chains = sampler_config.num_chains
@@ -63,7 +67,7 @@ def my_app(cfg):
 
     rng_key = jr.key(seed)
     output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
-    model, dim = set_model(model_name, dim)
+    model, dim = set_model(model_name, dim, sub_name)
     logdensity_fn = model.logp
     position = jnp.zeros(dim)
 
@@ -158,7 +162,8 @@ def my_app(cfg):
             json.dump(sampling_stats, f)
 
         # Wasserstein distance
-        true_samples = get_reference_draws(model, model_name, num_samples)
+
+        true_samples = get_reference_draws(model, model_name, num_samples, sub_name)
         distances1, distances2 = evaluate(rng_key, samples, true_samples, repeats)
         np.save(f"{output_dir}/distances1.npy", distances1)
         np.save(f"{output_dir}/distances2.npy", distances2)
@@ -176,7 +181,8 @@ def my_app(cfg):
         del distances1, distances2
         del true_samples
 
-    if dim == 2 and make_plots:
+    if make_plots:
+        # Plots first and last dimensions
         remove_outliers_theta0 = model_name == "funnel"
         plot_samples_marginal(
             samples,
