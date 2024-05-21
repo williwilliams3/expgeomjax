@@ -7,8 +7,6 @@ from cmdstanpy import CmdStanModel
 current_file_path = os.path.abspath(__file__)
 current_directory = os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))
 
-import matplotlib.pyplot as plt
-
 
 def generate_samples_stan(
     M,
@@ -43,10 +41,5 @@ if __name__ == "__main__":
 
     samples = generate_samples_stan(
         M,
-        samples_dir=os.path.join(
-            current_directory, "data/ground_truth_samples/banana/"
-        ),
+        samples_dir=os.path.join(current_directory, "data/reference_samples/banana/"),
     )
-
-    # plt.scatter(samples[:, 0], samples[:, 1], alpha=0.5)
-    # plt.show()
