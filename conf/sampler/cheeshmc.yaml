@@ -1,4 +1,4 @@
-sampler_type: chees_hmc
+sampler_type: cheeshmc
 num_integration_steps: 10
 step_size: 0.1
 num_samples : 10_000

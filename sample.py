@@ -30,6 +30,7 @@ from utils import (
 )
 from utils.utils_evaluate import number_gradient_evaluations, estimate_implicit_steps
 from utils.utils_sampling import inference_loop_multiple_chains_pmap
+from utils.utils_adaptation import adaptation_chees
 from plotting.plotting_functions import plot_samples_marginal
 import json
 
@@ -69,7 +70,10 @@ def my_app(cfg):
     output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     model, dim = set_model(model_name, dim, sub_name)
     logdensity_fn = model.logp
+
+    # Initial Position (zero vector)
     position = jnp.zeros(dim)
+    positions = jnp.zeros((num_chains, dim))
 
     metric_fn = set_metric_fn(model, metric_method)
     inverse_mass_matrix = jnp.ones(dim)
@@ -88,16 +92,28 @@ def my_app(cfg):
             for key in params
             if key not in ["step_size", "inverse_mass_matrix"]
         }
-        (state, params), info_adapt = adaptation(
-            sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_params
-        )
+
+        if "chees" in sampler_type:
+            (states, params), info_adapt = adaptation_chees(
+                sampler_type,
+                logdensity_fn,
+                rng_key,
+                positions,
+                num_chains,
+                step_size,
+                metric_fn,
+            )
+        else:
+            (state, params), info_adapt = adaptation(
+                sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_params
+            )
         print("Adapted parameters:", params)
         sampler = sampler_fn(logdensity_fn, **params)
-        states = jax.vmap(sampler.init)(jnp.tile(state.position, (num_chains, 1)))
+        if "chees" not in sampler_type:
+            states = jax.vmap(sampler.init)(jnp.tile(state.position, (num_chains, 1)))
 
     else:
         sampler = sampler_fn(logdensity_fn, **params)
-        initial_positions = jnp.zeros((num_chains, dim))
         params = set_params_sampler(
             sampler_type,
             step_size,
@@ -106,7 +122,7 @@ def my_app(cfg):
             inverse_mass_matrix,
             metric_fn,
         )
-        states = jax.vmap(sampler.init)(initial_positions)
+        states = jax.vmap(sampler.init)(positions)
 
     if "nuts" in sampler_type:
         states, info, elapsed_time = inference_loop_multiple_chains_pmap(
@@ -120,6 +136,7 @@ def my_app(cfg):
         samples_tensor = states.position
     print(f"MCMC elapsed time: {elapsed_time:.2f} seconds")
     print(f"Acceptance rate: {info.acceptance_rate.mean()}")
+
     samples_tensor = samples_tensor[burnin::thinning]
     samples = samples_tensor.reshape(num_samples, dim)
 
@@ -169,16 +186,17 @@ def my_app(cfg):
         np.save(f"{output_dir}/distances2.npy", distances2)
         if model_name in ["funnel", "rosenbrock", "squiggle"]:
             col_index = -1 if model_name == "funnel" else 0
-            distances_marginal1, distances_marginal1 = evaluate(
+            distances_marginal1, distances_marginal2 = evaluate(
                 rng_key,
                 samples[:, col_index : jnp.newaxis],
                 true_samples[:, col_index : jnp.newaxis],
                 repeats,
             )
             np.save(f"{output_dir}/distances_marginal1.npy", distances_marginal1)
-            np.save(f"{output_dir}/distances_marginal2.npy", distances_marginal1)
+            np.save(f"{output_dir}/distances_marginal2.npy", distances_marginal2)
 
         del distances1, distances2
+        del distances_marginal1, distances_marginal2
         del true_samples
 
     if make_plots:

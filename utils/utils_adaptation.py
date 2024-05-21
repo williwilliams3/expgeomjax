@@ -1,4 +1,5 @@
 import geomjax
+import optax
 
 
 def adaptation(
@@ -33,3 +34,30 @@ def adaptation(
     if sampler_type in ["lmcmonge", "nutslmcmonge"]:
         parameters["alpha2"] = extra_parameters["alpha2"]
     return (state, parameters), info
+
+
+def adaptation_chees(
+    sampler_type,
+    logdensity_fn,
+    rng_key,
+    positions,
+    num_chains,
+    initial_step_size,
+    metric_fn=None,
+):
+    learning_rate = 0.025
+    if sampler_type == "cheeshmc":
+        warmup = geomjax.chees_adaptation(logdensity_fn, num_chains)
+        optim = optax.adam(learning_rate)
+        (last_states, parameters), info = warmup.run(
+            rng_key, positions, initial_step_size, optim
+        )
+    if sampler_type == "cheeslmc":
+        warmup = geomjax.chees_adaptation_lmc(
+            logprob_fn=logdensity_fn, num_chains=num_chains, metric_fn=metric_fn
+        )
+        optim = optax.adam(learning_rate)
+        (last_states, parameters), info = warmup.run(
+            rng_key, positions, initial_step_size, optim
+        )
+    return (last_states, parameters), info
