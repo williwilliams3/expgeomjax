@@ -31,7 +31,7 @@ def inference_loop(rng_key, sampler, initial_state, num_samples):
 
     @jax.jit
     def one_step(state, rng_key):
-        state, _ = kernel(rng_key, state)
+        state, info = kernel(rng_key, state)
         return state, (state, info)
 
     keys = jax.random.split(rng_key, num_samples)
@@ -48,11 +48,11 @@ def inference_loop_multiple_chains_pmap(
     _inference_loop_multiple_chains = jax.pmap(
         inference_loop, in_axes=(0, None, 0, None), static_broadcasted_argnums=(1, 3)
     )
-    end_time = time.time()
-    elapsed_time = end_time - start_time
     states, info = _inference_loop_multiple_chains(
         keys, sampler, initial_states, num_samples
     )
+    end_time = time.time()
+    elapsed_time = end_time - start_time
     return states, info, elapsed_time
 
 

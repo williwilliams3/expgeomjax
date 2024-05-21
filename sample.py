@@ -29,6 +29,7 @@ from utils import (
     adaptation,
 )
 from utils.utils_evaluate import number_gradient_evaluations, estimate_implicit_steps
+from utils.utils_sampling import inference_loop_multiple_chains_pmap
 from plotting.plotting_functions import plot_samples_marginal
 import json
 
@@ -103,12 +104,19 @@ def my_app(cfg):
         )
         states = jax.vmap(sampler.init)(initial_positions)
 
-    states, info, elapsed_time = inference_loop_multiple_chains(
-        rng_key, sampler, states, total_num_steps, num_chains
-    )
+    if "nuts" in sampler_type:
+        states, info, elapsed_time = inference_loop_multiple_chains_pmap(
+            rng_key, sampler, states, total_num_steps, num_chains
+        )
+        samples_tensor = states.position.transpose((1, 0, 2))
+        print("mom shape", info.momentum.shape)
+    else:
+        states, info, elapsed_time = inference_loop_multiple_chains(
+            rng_key, sampler, states, total_num_steps, num_chains
+        )
+        samples_tensor = states.position
     print(f"MCMC elapsed time: {elapsed_time:.2f} seconds")
     print(f"Acceptance rate: {info.acceptance_rate.mean()}")
-    samples_tensor = states.position
     samples_tensor = samples_tensor[burnin::thinning]
     samples = samples_tensor.reshape(num_samples, dim)
 
@@ -116,12 +124,17 @@ def my_app(cfg):
         # ESS and Rhat
         rhat = geomjax.rhat(samples_tensor, chain_axis=1, sample_axis=0)
         ess = geomjax.ess(samples_tensor, chain_axis=1, sample_axis=0)
-        momentums = info.momentum
-        momentums = momentums[burnin::thinning]
-        momentums = momentums.reshape(num_samples, dim)
-        average_implicit_steps = estimate_implicit_steps(
-            sampler_type, samples, momentums, step_size, logdensity_fn, metric_fn
-        )
+        if "rmhmc" in sampler_type:
+            momentums = info.momentum
+            if "nuts" in sampler_type:
+                momentums = momentums.transpose((1, 0, 2))
+            momentums = momentums[burnin::thinning]
+            momentums = momentums.reshape(num_samples, dim)
+            average_implicit_steps = estimate_implicit_steps(
+                samples, momentums, step_size, logdensity_fn, metric_fn
+            )
+        else:
+            average_implicit_steps = 1
         print(f"Rhat: {rhat}")
         print(f"ESS: {ess}")
         if "rmhmc" in sampler_type:
@@ -165,7 +178,7 @@ def my_app(cfg):
         del true_samples
 
     if dim == 2 and make_plots:
-        remove_outliers_theta0 = model.name == "NealFunnel"
+        remove_outliers_theta0 = model_name == "funnel"
         plot_samples_marginal(
             samples,
             model,

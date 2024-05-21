@@ -92,27 +92,22 @@ def number_gradient_evaluations(
     return gradient_evals
 
 
-def estimate_implicit_steps(
-    sampler_type, positions, momentums, step_size, logdensity_fn, metric_fn
-):
+def estimate_implicit_steps(positions, momentums, step_size, logdensity_fn, metric_fn):
 
-    if sampler_type in ["rmhmc", "nutsrmhmc"]:
-        integration_states = (positions, momentums)
-        integrator = implicit_midpoint
-        (
-            _,
-            kinetic_energy_fn,
-            _,
-            inverse_metric_vector_product,
-        ) = gaussian_riemannian(metric_fn)
-        symplectic_integrator = integrator(
-            logdensity_fn,
-            kinetic_energy_fn,
-            inverse_metric_vector_product,
-            return_info=True,
-        )
-        integrator_fn = lambda x: symplectic_integrator(x, step_size)
-        _, info = jax.vmap(integrator_fn)(integration_states)
-        return info.iters.mean()
-    else:
-        return 1
+    integration_states = (positions, momentums)
+    integrator = implicit_midpoint
+    (
+        _,
+        kinetic_energy_fn,
+        _,
+        inverse_metric_vector_product,
+    ) = gaussian_riemannian(metric_fn)
+    symplectic_integrator = integrator(
+        logdensity_fn,
+        kinetic_energy_fn,
+        inverse_metric_vector_product,
+        return_info=True,
+    )
+    integrator_fn = lambda x: symplectic_integrator(x, step_size)
+    _, info = jax.vmap(integrator_fn)(integration_states)
+    return info.iters.mean()
