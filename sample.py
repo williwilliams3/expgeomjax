@@ -109,7 +109,6 @@ def my_app(cfg):
             rng_key, sampler, states, total_num_steps, num_chains
         )
         samples_tensor = states.position.transpose((1, 0, 2))
-        print("mom shape", info.momentum.shape)
     else:
         states, info, elapsed_time = inference_loop_multiple_chains(
             rng_key, sampler, states, total_num_steps, num_chains
