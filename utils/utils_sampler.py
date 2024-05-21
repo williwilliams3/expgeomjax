@@ -14,7 +14,7 @@ def set_sampler(sampler_type):
         sampler = geomjax.nuts
     elif sampler_type == "nutslmc":
         sampler = geomjax.nutslmc
-    elif sampler == "nutslmcmonge":
+    elif sampler_type == "nutslmcmonge":
         sampler = geomjax.nutslmcmonge
     elif sampler_type == "nutsrmhmc":
         sampler = geomjax.nutsrmhmc

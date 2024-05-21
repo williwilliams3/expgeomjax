@@ -2,7 +2,7 @@ from jax import config
 import os
 
 config.update("jax_enable_x64", True)
-os.environ["XLA_FLAGS"] = 8
+os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=8"
 
 import sys
 import gc
@@ -65,7 +65,7 @@ def my_app(cfg):
 
     metric_fn = set_metric_fn(model, metric_method)
     inverse_mass_matrix = jnp.ones(dim)
-    sampler_fn = set_sampler(logdensity_fn, sampler_type, params)
+    sampler_fn = set_sampler(sampler_type)
     if run_adaptation:
         params = set_params_sampler(
             sampler_type,
@@ -75,14 +75,21 @@ def my_app(cfg):
             inverse_mass_matrix,
             metric_fn,
         )
-        extra_params = {key: params[key] for key in params if key not in ["step_size"]}
+        extra_params = {
+            key: params[key]
+            for key in params
+            if key not in ["step_size", "inverse_mass_matrix"]
+        }
         (state, params), info_adapt = adaptation(
             sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_params
         )
-        states = jnp.tile(state, (num_chains, 1))
+        print("Adapted parameters:", params)
+        sampler = sampler_fn(logdensity_fn, **params)
+        states = jax.vmap(sampler.init)(jnp.tile(state.position, (num_chains, 1)))
+
     else:
+        sampler = sampler_fn(logdensity_fn, **params)
         initial_positions = jnp.zeros((num_chains, dim))
-        states = jax.vmap(sampler.init)(initial_positions)
         params = set_params_sampler(
             sampler_type,
             step_size,
@@ -91,8 +98,7 @@ def my_app(cfg):
             inverse_mass_matrix,
             metric_fn,
         )
-
-    sampler = sampler_fn(logdensity_fn, **params)
+        states = jax.vmap(sampler.init)(initial_positions)
 
     states, info, elapsed_time = inference_loop_multiple_chains(
         rng_key, sampler, states, total_num_steps, num_chains

@@ -6,4 +6,5 @@ num_chains : 8
 burnin: 1000
 thinning: 1
 metric_method: fisher
-
+run_adaptation: True
+alpha: 1.0
