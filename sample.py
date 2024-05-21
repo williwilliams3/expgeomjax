@@ -45,6 +45,8 @@ def my_app(cfg):
     model_name = model_config.model_name
     dim = model_config.dim
     run_evaluation = model_config.run_evaluation
+    make_plots = model_config.make_plots
+
     num_samples = sampler_config.num_samples
     num_chains = sampler_config.num_chains
     burnin = sampler_config.burnin
@@ -110,23 +112,17 @@ def my_app(cfg):
     samples_tensor = samples_tensor[burnin::thinning]
     samples = samples_tensor.reshape(num_samples * num_chains, dim)
 
-    if dim == 2:
-        remove_outliers_theta0 = model.name == "NealFunnel"
-        plot_samples_marginal(
-            samples,
-            model,
-            file_name=f"{output_dir}/samples.png",
-            remove_outliers_theta0=remove_outliers_theta0,
-        )
-
     if run_evaluation:
         # ESS and Rhat
         rhat = geomjax.rhat(samples_tensor, chain_axis=1, sample_axis=0)
         ess = geomjax.ess(samples_tensor, chain_axis=1, sample_axis=0)
         average_implicit_steps = estimate_implicit_steps(
-            states, step_size, logdensity_fn, metric_fn
+            sampler_type, states, step_size, logdensity_fn, metric_fn
         )
-        print(f"Average implicit steps: {average_implicit_steps}")
+        print(f"Rhat: {rhat}")
+        print(f"ESS: {ess}")
+        if "rmhmc" in sampler_type:
+            print(f"Average implicit steps: {average_implicit_steps}")
         gradient_evaluations = number_gradient_evaluations(
             sampler_type,
             total_num_steps,
@@ -137,8 +133,8 @@ def my_app(cfg):
         )
 
         sampling_stats = {
-            "rhat": float(rhat),
-            "ess": float(ess),
+            "rhat": rhat.tolist(),
+            "ess": ess.tolist(),
             "elapsed_time": float(elapsed_time),
             "average_acceptance_rate": float(info.acceptance_rate.mean()),
             "gradient_evaluations": int(gradient_evaluations),
@@ -164,6 +160,15 @@ def my_app(cfg):
 
         del distances1, distances2
         del true_samples
+
+    if dim == 2 and make_plots:
+        remove_outliers_theta0 = model.name == "NealFunnel"
+        plot_samples_marginal(
+            samples,
+            model,
+            file_name=f"{output_dir}/samples.png",
+            remove_outliers_theta0=remove_outliers_theta0,
+        )
 
     del samples, samples_tensor
     gc.collect()

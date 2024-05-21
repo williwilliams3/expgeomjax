@@ -3,8 +3,8 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 
-import geomjax.rmhmc.integrators as integrators
-import geomjax.rmhmc.metrics as metrics
+from geomjax.rmhmc.integrators import implicit_midpoint
+from geomjax.rmhmc.metrics import gaussian_riemannian
 
 import ot
 import os
@@ -76,15 +76,7 @@ def evaluate(
 def evaluate_difficult_marginal(
     model_name, rng_key, samples, true_samples, repeats, subsample_size=2000
 ):
-    if model_name in ["funnel", "rosenbrock", "squiggle"]:
-        col_index = -1 if model_name == "funnel" else 0
-        return evaluate(
-            rng_key,
-            samples[:, col_index],
-            true_samples[:, col_index],
-            repeats,
-            subsample_size,
-        )
+
     return
 
 
@@ -116,13 +108,13 @@ def number_gradient_evaluations(
 def estimate_implicit_steps(sampler_type, states, step_size, logdensity_fn, metric_fn):
 
     if sampler_type in ["rmhmc", "nutsrmhmc"]:
-        integrator = integrators.implicit_midpoint
+        integrator = implicit_midpoint
         (
             _,
             kinetic_energy_fn,
             _,
             inverse_metric_vector_product,
-        ) = metrics.gaussian_riemannian(metric_fn)
+        ) = gaussian_riemannian(metric_fn)
         symplectic_integrator = integrator(
             logdensity_fn, kinetic_energy_fn, inverse_metric_vector_product
         )
