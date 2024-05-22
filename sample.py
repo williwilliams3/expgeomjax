@@ -40,7 +40,6 @@ def my_app(cfg):
     print(OmegaConf.to_yaml(cfg))
     sampler_config = cfg.sampler
     model_config = cfg.model
-
     repeats = cfg.repeats
     seed = cfg.rng_key
 
@@ -121,7 +120,7 @@ def my_app(cfg):
             states = jax.vmap(sampler.init)(jnp.tile(state.position, (num_chains, 1)))
 
     else:
-        sampler = sampler_fn(logdensity_fn, **params)
+
         params = set_params_sampler(
             sampler_type,
             step_size,
@@ -131,6 +130,7 @@ def my_app(cfg):
             metric_fn,
             stopping_criterion,
         )
+        sampler = sampler_fn(logdensity_fn, **params)
         states = jax.vmap(sampler.init)(positions)
 
     if "nuts" in sampler_type:

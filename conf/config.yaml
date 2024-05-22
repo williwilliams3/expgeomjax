@@ -7,9 +7,9 @@ repeats: 5
 rng_key: 1
 hydra:
   run:
-    dir: logs/model=${model.model_name}/dim=${model.dim}{model.sub_subname}/${hydra.job.override_dirname}/rng_key=${rng_key}
+    dir: logs/model=${model.model_name}/dim=${model.dim}${model.sub_name}/${hydra.job.override_dirname}/rng_key=${rng_key}
   sweep:
-    dir: logs/model=${model.model_name}/dim=${model.dim}{model.sub_subname}/${hydra.job.override_dirname}
+    dir: logs/model=${model.model_name}/dim=${model.dim}${model.sub_name}/${hydra.job.override_dirname}
     subdir: rng_key=${rng_key}
   job:
     config:
