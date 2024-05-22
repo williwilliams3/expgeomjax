@@ -43,21 +43,38 @@ def adaptation_chees(
     positions,
     num_chains,
     initial_step_size,
+    inverse_mass_matrix=None,
     metric_fn=None,
 ):
     learning_rate = 0.025
+    optim = optax.adam(learning_rate)
     if sampler_type == "cheeshmc":
         warmup = geomjax.chees_adaptation(logdensity_fn, num_chains)
-        optim = optax.adam(learning_rate)
-        (last_states, parameters), info = warmup.run(
-            rng_key, positions, initial_step_size, optim
-        )
+
     if sampler_type == "cheeslmc":
-        warmup = geomjax.chees_adaptation_lmc(
-            logprob_fn=logdensity_fn, num_chains=num_chains, metric_fn=metric_fn
+        warmup = geomjax.chees_adaptation_riemanian(
+            logprob_fn=logdensity_fn,
+            num_chains=num_chains,
+            metric_fn=metric_fn,
+            dynamics="lmc",
         )
-        optim = optax.adam(learning_rate)
-        (last_states, parameters), info = warmup.run(
-            rng_key, positions, initial_step_size, optim
+
+    elif sampler_type == "cheesrmhmc":
+        warmup = geomjax.chees_adaptation_riemanian(
+            logprob_fn=logdensity_fn,
+            num_chains=num_chains,
+            metric_fn=metric_fn,
+            dynamics="rmhmc",
         )
+    elif sampler_type == "cheeslmcmonge":
+        warmup = geomjax.chees_adaptation_lmcmonge(
+            logprob_fn=logdensity_fn,
+            num_chains=num_chains,
+            inverse_mass_matrix=inverse_mass_matrix,
+            update_alpha=False,
+        )
+
+    (last_states, parameters), info = warmup.run(
+        rng_key, positions, initial_step_size, optim
+    )
     return (last_states, parameters), info

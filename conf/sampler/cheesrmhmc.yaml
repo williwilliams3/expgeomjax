@@ -1,5 +1,5 @@
-sampler_type: nutsrmhmc
-num_integration_steps: None
+sampler_type: cheesrmhmc
+num_integration_steps: 10
 step_size: 0.1
 num_samples : 10_000
 num_chains : 8
@@ -8,4 +8,3 @@ thinning: 1
 metric_method: fisher
 run_adaptation: True
 alpha: 1.0
-stopping_criterion: euc

@@ -101,7 +101,8 @@ def my_app(cfg):
                 positions,
                 num_chains,
                 step_size,
-                metric_fn,
+                inverse_mass_matrix=inverse_mass_matrix,
+                metric_fn=metric_fn,
             )
         else:
             (state, params), info_adapt = adaptation(

@@ -22,6 +22,10 @@ def set_sampler(sampler_type):
         sampler = geomjax.dynamic_hmc
     elif sampler_type == "cheeslmc":
         sampler = geomjax.dynamic_lmc
+    elif sampler_type == "cheesrmhmc":
+        sampler = geomjax.dynamic_rmhmc
+    elif sampler_type == "cheeslmcmonge":
+        sampler = geomjax.dynamic_lmcmonge
     else:
         raise ValueError("Invalid sampler type")
     return sampler
@@ -69,7 +73,7 @@ def set_params_sampler(
     elif sampler_type == "cheeshmc":
         params["step_size"] = step_size
         params["inverse_mass_matrix"] = inverse_mass_matrix
-    elif sampler_type == "cheeslmc":
+    elif sampler_type in ["cheeslmc", "cheesrmhmc", "cheeslmcmonge"]:
         params["step_size"] = step_size
     else:
         raise ValueError("Invalid sampler type")
