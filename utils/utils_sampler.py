@@ -38,6 +38,7 @@ def set_params_sampler(
     alpha2,
     inverse_mass_matrix,
     metric_fn,
+    stopping_criterion,
 ):
     params = {}
     if sampler_type == "hmc":
@@ -63,13 +64,16 @@ def set_params_sampler(
     elif sampler_type == "nutslmc":
         params["step_size"] = step_size
         params["metric_fn"] = metric_fn
+        params["stopping_criterion"] = stopping_criterion
     elif sampler_type == "nutsrmhmc":
         params["step_size"] = step_size
         params["metric_fn"] = metric_fn
+        params["stopping_criterion"] = stopping_criterion
     elif sampler_type == "nutslmcmonge":
         params["step_size"] = step_size
         params["alpha2"] = alpha2
         params["inverse_mass_matrix"] = inverse_mass_matrix
+        params["stopping_criterion"] = stopping_criterion
     elif sampler_type == "cheeshmc":
         params["step_size"] = step_size
         params["inverse_mass_matrix"] = inverse_mass_matrix

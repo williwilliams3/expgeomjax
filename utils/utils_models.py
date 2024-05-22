@@ -24,9 +24,6 @@ def set_model(name_model, dim, sub_model=""):
         elif sub_model == "dogs-dogs":
             M = postjax.posteriordb_models.dogs_dogs()
             dim = M.D
-        elif sub_model == "dogs-dogs_log":
-            M = postjax.posteriordb_models.dogs_log()
-            dim = M.D
         elif sub_model == "earnings-logearn_interaction":
             M = postjax.posteriordb_models.logearn_interaction()
             dim = M.D

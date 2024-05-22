@@ -1,5 +1,5 @@
 model_name : logreg
 dim : None
-run_evaluation: False
+run_evaluation: True
 make_plots: False
 sub_name: "australian"

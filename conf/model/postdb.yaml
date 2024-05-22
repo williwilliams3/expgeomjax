@@ -1,5 +1,5 @@
 model_name : postdb
 dim : None
-run_evaluation: False
+run_evaluation: True
 make_plots: False
 sub_name: "low_dim_gauss_mix-low_dim_gauss_mix"

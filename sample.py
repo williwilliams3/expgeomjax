@@ -63,6 +63,10 @@ def my_app(cfg):
     metric_method = sampler_config.metric_method
     alpha = sampler_config.alpha
     run_adaptation = sampler_config.run_adaptation
+    if sampler_type in ["nutslmc", "nutslmcmonge", "nutsrmhmc"]:
+        stopping_criterion = sampler_config.stopping_criterion
+    else:
+        stopping_criterion = None
 
     total_num_steps = burnin + (num_samples // num_chains) * thinning
 
@@ -86,6 +90,7 @@ def my_app(cfg):
             alpha,
             inverse_mass_matrix,
             metric_fn,
+            stopping_criterion,
         )
         extra_params = {
             key: params[key]
@@ -122,6 +127,7 @@ def my_app(cfg):
             alpha,
             inverse_mass_matrix,
             metric_fn,
+            stopping_criterion,
         )
         states = jax.vmap(sampler.init)(positions)
 
