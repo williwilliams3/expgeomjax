@@ -67,6 +67,8 @@ def my_app(cfg):
         stopping_criterion = sampler_config.stopping_criterion
     else:
         stopping_criterion = None
+    if metric_method == "softabs":
+        alpha = 1e6
 
     total_num_steps = burnin + (num_samples // num_chains) * thinning
 
