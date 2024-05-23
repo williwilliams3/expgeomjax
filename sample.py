@@ -203,9 +203,9 @@ def my_app(cfg):
             )
             np.save(f"{output_dir}/distances_marginal1.npy", distances_marginal1)
             np.save(f"{output_dir}/distances_marginal2.npy", distances_marginal2)
+            del distances_marginal1, distances_marginal2
 
         del distances1, distances2
-        del distances_marginal1, distances_marginal2
         del true_samples
 
     if make_plots:
