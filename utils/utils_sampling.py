@@ -61,7 +61,7 @@ def inference_loop_multiple_chains_pmap(
 
 
 def get_reference_draws(M, name_model, num_samples, sub_name=""):
-    if name_model in ["funnel", "squiggle", "rosenrbrock"]:
+    if name_model in ["funnel", "squiggle", "rosenbrock"]:
         rng_key_true = jax.random.PRNGKey(42)
         samples_true = np.array(M.generate_samples(rng_key_true, num_samples))
     elif name_model == "banana":
