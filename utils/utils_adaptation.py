@@ -32,7 +32,7 @@ def adaptation(
         )
     (state, parameters), info = adaptation_algo.run(rng_key, position)
     if sampler_type in ["lmcmonge", "nutslmcmonge"]:
-        parameters["alpha2"] = extra_parameters["alpha2"]
+        parameters = {**parameters, **extra_parameters}
     return (state, parameters), info
 
 
