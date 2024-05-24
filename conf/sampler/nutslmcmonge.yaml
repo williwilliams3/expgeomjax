@@ -1,4 +1,4 @@
-sampler_type: nutslmcmongeid
+sampler_type: nutslmcmonge
 num_integration_steps: None
 step_size: 0.1
 num_samples : 10_000
