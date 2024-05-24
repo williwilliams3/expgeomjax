@@ -8,3 +8,4 @@ thinning: 1
 metric_method: monge
 run_adaptation: True
 alpha: 1.0
+stopping_criterion: chees

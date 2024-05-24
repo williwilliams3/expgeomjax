@@ -156,3 +156,4 @@ cython_debug/
 data/
 *.hpp
 *.tmp
+temp/

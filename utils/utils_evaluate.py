@@ -84,7 +84,10 @@ def number_gradient_evaluations(
             * num_integration_steps
             * average_implicit_steps
         )
-    elif sampler_type in ["nuts", "nutslmc", "nutslmcmonge"] or "chees" in sampler_type:
+    elif (
+        sampler_type in ["nuts", "nutslmc", "nutslmcmonge", "nutslmcmongeid"]
+        or "chees" in sampler_type
+    ):
         gradient_evals = jnp.sum(info.num_integration_steps)
     elif sampler_type in ["nutsrmhmc"]:
         gradient_evals = jnp.sum(info.num_integration_steps) * average_implicit_steps

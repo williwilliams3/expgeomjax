@@ -14,7 +14,7 @@ def set_sampler(sampler_type):
         sampler = geomjax.nuts
     elif sampler_type == "nutslmc":
         sampler = geomjax.nutslmc
-    elif sampler_type == "nutslmcmonge":
+    elif sampler_type in ["nutslmcmonge", "nutslmcmongeid"]:
         sampler = geomjax.nutslmcmonge
     elif sampler_type == "nutsrmhmc":
         sampler = geomjax.nutsrmhmc
@@ -69,7 +69,7 @@ def set_params_sampler(
         params["step_size"] = step_size
         params["metric_fn"] = metric_fn
         params["stopping_criterion"] = stopping_criterion
-    elif sampler_type == "nutslmcmonge":
+    elif sampler_type in ["nutslmcmonge", "nutslmcmongeid"]:
         params["step_size"] = step_size
         params["alpha2"] = alpha2
         params["inverse_mass_matrix"] = inverse_mass_matrix

@@ -8,3 +8,4 @@ thinning: 1
 metric_method: euc
 run_adaptation: True
 alpha: None
+stopping_criterion: chees

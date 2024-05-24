@@ -62,7 +62,7 @@ def my_app(cfg):
     metric_method = sampler_config.metric_method
     alpha = sampler_config.alpha
     run_adaptation = sampler_config.run_adaptation
-    if sampler_type in ["nutslmc", "nutslmcmonge", "nutsrmhmc"]:
+    if sampler_type in ["nutslmc", "nutslmcmonge", "nutsrmhmc", "nutslmcmongeid"]:
         stopping_criterion = sampler_config.stopping_criterion
     else:
         stopping_criterion = None
@@ -93,11 +93,16 @@ def my_app(cfg):
             metric_fn,
             stopping_criterion,
         )
-        extra_params = {
-            key: params[key]
-            for key in params
-            if key not in ["step_size", "inverse_mass_matrix"]
-        }
+        if sampler_type in ["nutslmcmongeid"]:
+            extra_params = {
+                key: params[key] for key in params if key in ["inverse_mass_matrix"]
+            }
+        else:
+            extra_params = {
+                key: params[key]
+                for key in params
+                if key not in ["step_size", "inverse_mass_matrix"]
+            }
 
         if "chees" in sampler_type:
             (states, params), info_adapt = adaptation_chees(

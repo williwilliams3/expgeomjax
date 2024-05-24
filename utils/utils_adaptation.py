@@ -26,12 +26,19 @@ def adaptation(
             logdensity_fn,
             is_mass_matrix_diagonal=True,
         )
+    elif sampler_type in ["nutslmcmongeid"]:
+        # Adapt monge with euclidean metric
+        adaptation_algo = geomjax.step_size_adaptation(
+            geomjax.nuts,
+            logdensity_fn,
+            **extra_parameters,
+        )
     else:
         adaptation_algo = geomjax.step_size_adaptation(
             sampler_fn, logdensity_fn, **extra_parameters
         )
     (state, parameters), info = adaptation_algo.run(rng_key, position)
-    if sampler_type in ["lmcmonge", "nutslmcmonge"]:
+    if sampler_type in ["lmcmonge", "nutslmcmonge", "nutslmcmongeid"]:
         parameters = {**parameters, **extra_parameters}
     return (state, parameters), info
 
