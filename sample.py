@@ -216,11 +216,16 @@ def my_app(cfg):
     if make_plots:
         # Plots first and last dimensions
         remove_outliers_theta0 = model_name == "funnel"
+        if sampler_type == "nuts":
+            scatter_color = "#FF7F7F"
+        else:
+            scatter_color = "#7FD6FF"
         plot_samples_marginal(
             samples,
             model,
             file_name=f"{output_dir}/samples.png",
             remove_outliers_theta0=remove_outliers_theta0,
+            scatter_color=scatter_color,
         )
 
     del samples, samples_tensor
