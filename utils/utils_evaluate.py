@@ -75,7 +75,7 @@ def number_gradient_evaluations(
     info,
     average_implicit_steps=5,
 ):
-    if sampler_type in ["hmc", "lmc", "lmcmonge"]:
+    if sampler_type in ["hmc", "lmc", "lmcmonge", "lmcmongeid"]:
         gradient_evals = total_num_steps * num_chains * num_integration_steps
     elif sampler_type in ["rmhmc"]:
         gradient_evals = (

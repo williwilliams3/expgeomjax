@@ -6,7 +6,7 @@ def set_sampler(sampler_type):
         sampler = geomjax.hmc
     elif sampler_type == "lmc":
         sampler = geomjax.lmc
-    elif sampler_type == "lmcmonge":
+    elif sampler_type in ["lmcmonge", "lmcmongeid"]:
         sampler = geomjax.lmcmonge
     elif sampler_type == "rmhmc":
         sampler = geomjax.rmhmc
@@ -49,7 +49,7 @@ def set_params_sampler(
         params["step_size"] = step_size
         params["num_integration_steps"] = num_integration_steps
         params["metric_fn"] = metric_fn
-    elif sampler_type == "lmcmonge":
+    elif sampler_type in ["lmcmonge", "lmcmongeid"]:
         params["step_size"] = step_size
         params["num_integration_steps"] = num_integration_steps
         params["alpha2"] = alpha2

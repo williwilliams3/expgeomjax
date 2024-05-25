@@ -93,9 +93,9 @@ def my_app(cfg):
             metric_fn,
             stopping_criterion,
         )
-        if sampler_type in ["nutslmcmongeid"]:
+        if sampler_type in ["lmcmonge", "nutslmcmonge", "lmcmongeid", "nutslmcmongeid"]:
             extra_params = {
-                key: params[key] for key in params if key in ["inverse_mass_matrix"]
+                key: params[key] for key in params if key not in ["step_size"]
             }
         else:
             extra_params = {

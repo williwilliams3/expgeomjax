@@ -19,21 +19,33 @@ def adaptation(
             is_mass_matrix_diagonal=True,
             num_integration_steps=extra_parameters["num_integration_steps"],
         )
+        (state, parameters), _ = adaptation_algo.run(rng_key, position)
+        extra_parameters["inverse_mass_matrix"] = parameters["inverse_mass_matrix"]
+        position = state.position
+        # Adapt step size
+        adaptation_algo = geomjax.step_size_adaptation(
+            sampler_fn,
+            logdensity_fn,
+            **extra_parameters,
+        )
     elif sampler_type in ["nutslmcmonge"]:
-        # Adapt monge with euclidean metric
+        # Get inverse mass matrix
         adaptation_algo = geomjax.window_adaptation(
             geomjax.nuts,
             logdensity_fn,
             is_mass_matrix_diagonal=True,
         )
-    elif sampler_type in ["nutslmcmongeid"]:
-        # Adapt monge with euclidean metric
+        (state, parameters), _ = adaptation_algo.run(rng_key, position)
+        extra_parameters["inverse_mass_matrix"] = parameters["inverse_mass_matrix"]
+        position = state.position
+        # Adapt step size
         adaptation_algo = geomjax.step_size_adaptation(
-            geomjax.nuts,
+            sampler_fn,
             logdensity_fn,
             **extra_parameters,
         )
     else:
+        # Adapt step size
         adaptation_algo = geomjax.step_size_adaptation(
             sampler_fn, logdensity_fn, **extra_parameters
         )
