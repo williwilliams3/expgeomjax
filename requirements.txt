@@ -1,0 +1,16 @@
+arviz
+blackjax
+cmdstanpy
+hydra-core
+jax>=0.4.16
+jaxlib>=0.4.16
+numpy
+POT
+promise
+pystan
+scipy
+tqdm
+matplotlib
+arviz
+fastprogress
+posteriordb
