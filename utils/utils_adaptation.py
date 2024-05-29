@@ -3,7 +3,13 @@ import optax
 
 
 def adaptation(
-    sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_parameters
+    sampler_fn,
+    sampler_type,
+    logdensity_fn,
+    rng_key,
+    position,
+    extra_parameters,
+    alpha2,
 ):
 
     if sampler_type in ["hmc", "nuts"]:
@@ -35,13 +41,18 @@ def adaptation(
             logdensity_fn,
             is_mass_matrix_diagonal=True,
         )
-        (state, parameters), _ = adaptation_algo.run(rng_key, position)
+        (state, parameters), info = adaptation_algo.run(rng_key, position)
+        print("Window adaptation parameters:", parameters)
         extra_parameters["inverse_mass_matrix"] = parameters["inverse_mass_matrix"]
+        if alpha2 == 0:
+            parameters = {**parameters, **extra_parameters}
+            return (state, parameters), info
         position = state.position
         # Adapt step size
         adaptation_algo = geomjax.step_size_adaptation(
             sampler_fn,
             logdensity_fn,
+            initial_step_size=parameters["step_size"],
             **extra_parameters,
         )
     else:

@@ -117,7 +117,13 @@ def my_app(cfg):
             )
         else:
             (state, params), info_adapt = adaptation(
-                sampler_fn, sampler_type, logdensity_fn, rng_key, position, extra_params
+                sampler_fn,
+                sampler_type,
+                logdensity_fn,
+                rng_key,
+                position,
+                extra_params,
+                alpha,
             )
         print("Adapted parameters:", params)
         sampler = sampler_fn(logdensity_fn, **params)
