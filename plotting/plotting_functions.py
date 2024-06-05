@@ -27,7 +27,7 @@ def plot_samples_marginal(
     hist_edge_color = "#D5D8DC"
     hist_face_color = scatter_color
     density_color = "#273746"
-    cmap_colors = plt.cm.get_cmap("Greys").reversed()
+    cmap_colors = plt.get_cmap("Greys").reversed()
 
     if do_use_latex == True:
         plt.rcParams["text.usetex"] = True

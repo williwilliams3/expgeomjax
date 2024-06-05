@@ -1,3 +1,11 @@
+import os
+import sys
+
+current_dir = os.path.abspath(os.path.dirname(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
+
 import postjax
 
 
@@ -7,7 +15,7 @@ def set_model(name_model, dim, sub_model=""):
     elif name_model == "squiggle":
         M = postjax.squiggle(D=dim)
     elif name_model == "rosenbrock":
-        M = postjax.hybrid_rosenbrock(D=dim, n1=1)
+        M = postjax.simple_rosenbrock(D=dim)
     elif name_model == "banana":
         M = postjax.banana()
         dim = M.D

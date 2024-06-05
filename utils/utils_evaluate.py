@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import jax.random as jr
 import numpy as np
 
-from geomjax.rmhmc.integrators import implicit_midpoint, IntegratorState
+from geomjax.rmhmc.integrators import implicit_midpoint
 from geomjax.rmhmc.metrics import gaussian_riemannian
 
 import ot
